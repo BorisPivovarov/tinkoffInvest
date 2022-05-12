@@ -19,7 +19,7 @@ public class TinkoffService {
         Trade trade = trades.get(trades.size() - 1);
         BigDecimal unit = BigDecimal.valueOf(trade.getPrice().getUnits());
         BigDecimal nano = BigDecimal.valueOf(trade.getPrice().getNano());
-        return unit + "," + nano + "RUB";
+        return unit + "," + nano + " RUB";
     }
 
     public String getWithdrawLimits() {
