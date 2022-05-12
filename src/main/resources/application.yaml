@@ -1,0 +1,4 @@
+bot:
+  url: https://api.telegram.org/
+  username: tinkoff_invest_bot
+  token: ${TELEGRAM_BOT_TOKEN}
