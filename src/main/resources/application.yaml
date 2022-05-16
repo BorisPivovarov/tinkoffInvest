@@ -2,3 +2,12 @@ bot:
   url: https://api.telegram.org/
   username: tinkoff_invest_bot
   token: ${TELEGRAM_BOT_TOKEN}
+
+tinkoff:
+  token: ${TINKOFF_TOKEN}
+
+
+spring:
+  redis:
+    host: localhost
+    port: 6379
