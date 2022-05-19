@@ -1,4 +1,4 @@
-package ru.boris.tinkoffbot.service;
+package ru.boris.tinkoffInvestBot.service;
 
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +34,15 @@ public class TinkoffService {
         return value;
     }
 
-
     public BigDecimal getEURCurrency() throws IndexOutOfBoundsException {
         InvestApi api = InvestApi.create(TOKEN);
         List<Trade> trades = api.getMarketDataService().getLastTradesSync("BBG0013HJJ31");
         return getValue(trades);
+    }
+
+    public String getAccessLevel() {
+        InvestApi api = InvestApi.create(TOKEN);
+        return api.getUserService().getAccountsSync().get(2).getAccessLevel().toString();
     }
 
     public BigDecimal getUSDCurrency() throws IndexOutOfBoundsException {
@@ -64,8 +68,9 @@ public class TinkoffService {
 
     public String getDaysList() {
         InvestApi api = InvestApi.create(TOKEN);
+        var getDaysListMessage = "";
         var tradingSchedules =
-                api.getInstrumentsService().getTradingScheduleSync("moex", Instant.now(), Instant.now().plus(3, ChronoUnit.DAYS));
+                api.getInstrumentsService().getTradingScheduleSync("moex", Instant.now(), Instant.now().plus(0, ChronoUnit.DAYS));
         for (
                 TradingDay tradingDay : tradingSchedules.getDaysList()) {
             var date = timestampToString(tradingDay.getDate());
@@ -73,13 +78,13 @@ public class TinkoffService {
             var endDate = timestampToString(tradingDay.getEndTime());
             if (tradingDay.getIsTradingDay()) {
                 log.info("расписание торгов для площадки MOEX. Дата: {},  открытие: {}, закрытие: {}", date, startDate, endDate);
-                return "Расписание торгов для площадки MOEX:\n Дата: " + date + "  открытие: "
-                        + startDate + " закрытие: " + endDate;
+                getDaysListMessage =  "Расписание торгов для площадки MOEX на сегодня\n" + "открытие: "
+                        + startDate.replaceAll("[T,Z]", " ") + "\nзакрытие: " + endDate.replaceAll("[T,Z]", " ");
             } else {
                 log.info("расписание торгов для площадки MOEX. Дата: {}. Выходной день", date);
-                return "Расписание торгов для площадки MOEX:\n Дата: " + date + " выходной день";
+                getDaysListMessage = "Расписание торгов для площадки MOEX:\n Дата: " + date.replaceAll("[T,Z]", " ") + " выходной день";
             }
         }
-        return null;
+        return getDaysListMessage;
     }
 }

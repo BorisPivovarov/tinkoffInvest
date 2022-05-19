@@ -1,23 +1,19 @@
-package ru.boris.tinkoffbot.bot;
+package ru.boris.tinkoffInvestBot.bot;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
-import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.boris.tinkoffbot.service.CurrencyRedisService;
-import ru.boris.tinkoffbot.service.TinkoffService;
+import ru.boris.tinkoffInvestBot.service.CurrencyRedisService;
+import ru.boris.tinkoffInvestBot.service.TinkoffService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,15 +23,13 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class Bot extends TelegramLongPollingBot {
 
-    //    private static final String GET_DAYS = "/getDaysList";
     private static final String GET_EUR_COMMAND = "курс евро";
     private static final String GET_WITHDRAW_LIMITS = "остаток на счёте";
     private static final String CET_USD_COMMAND = "курс доллара";
+    private static final String GET_DAYS_LIST = "время работы биржи";
 
     private final String TOKEN;
     private final String USER_NAME;
-    private final String sticker1 = "CAACAgIAAxkBAAEEvmFigk7557QWN_FzOqMmQ7msKZ3CogACEQADuhxDEvfNcMeN9JFqJAQ";
-    private final String a = "";
 
     private final CurrencyRedisService currencyRedisService;
     private final TinkoffService tinkoffService;
@@ -74,30 +68,33 @@ public class Bot extends TelegramLongPollingBot {
             responseBuilder.replyMarkup(getKeyboard());
 
             String responseText;
+
             if (message.getText().equals("/start")) {
                 responseText = "Привет, " + message.getFrom().getFirstName() +
                         "!\n Я бот, работающий с Tinkoff Invest API.";
             } else if (message.getText().equals(GET_EUR_COMMAND)) {
                 try {
-                    responseText = "В данный момент курс на московской бирже:\n"  +
-                            tinkoffService.getEURCurrency().toString() + "RUB";
+                    responseText = getMOEXPriceMessage() +
+                            tinkoffService.getEURCurrency().toString() + " RUB";
                 } catch (IndexOutOfBoundsException ioe) {
                     ioe.printStackTrace();
                     BigDecimal eur = currencyRedisService.getCurrency("eur").getPrice();
-                    log.info("Данные загружаются из Redis " + eur.toString());
-                    responseText = eur + " RUB\n" + "Курс актуальный на момент закрытия биржи";
+                    log.info(getRedisMessage() + eur.toString());
+                    responseText = eur + " RUB\n" + getTodayLastPriceMessage();
                 }
             } else if (message.getText().equals(GET_WITHDRAW_LIMITS)) {
                 responseText = String.valueOf((tinkoffService.getWithdrawLimits()));
 
+            } else if (message.getText().equals(GET_DAYS_LIST)) {
+                responseText = tinkoffService.getDaysList();
             } else if (message.getText().equals(CET_USD_COMMAND)) {
                 try {
-                    responseText = "В данный момент курс на московской бирже:\n" +
-                            tinkoffService.getUSDCurrency().toString() + "RUB";
+                    responseText = getMOEXPriceMessage() +
+                            tinkoffService.getUSDCurrency().toString() + " RUB";
                 } catch (IndexOutOfBoundsException ioe) {
                     BigDecimal usd = currencyRedisService.getCurrency("usd").getPrice();
-                    log.info("Данные загружаются из Redis " + usd.toString());
-                    responseText = usd + " RUB\n" + "Курс актуальный на момент закрытия биржи";
+                    log.info(getRedisMessage() + usd.toString());
+                    responseText = usd + " RUB\n" + getTodayLastPriceMessage();
                 }
             } else {
                 responseText = "Данная команда не распознана, попробуйте что-нибудь ещё.";
@@ -106,15 +103,13 @@ public class Bot extends TelegramLongPollingBot {
             sendResponse(responseBuilder, responseText);
         }
     }
-    private InlineKeyboardButton getKeyboardInline() {
 
-        return null;
-    }
     private ReplyKeyboard getKeyboard() {
         KeyboardRow keyboardRow = new KeyboardRow();
         keyboardRow.add(GET_WITHDRAW_LIMITS);
         keyboardRow.add(GET_EUR_COMMAND);
         keyboardRow.add(CET_USD_COMMAND);
+//        keyboardRow.add(GET_DAYS_LIST);
         List<KeyboardRow> keyboardRows = List.of(keyboardRow);
 
         ReplyKeyboardMarkup replyKeyboard = new ReplyKeyboardMarkup();
@@ -129,5 +124,17 @@ public class Bot extends TelegramLongPollingBot {
         } catch (TelegramApiException apiException) {
             apiException.printStackTrace();
         }
+    }
+
+    private String getMOEXPriceMessage() {
+        return "В данный момент курс на московской бирже:\n";
+    }
+
+    private String getRedisMessage() {
+        return "Данные загружаются из Redis кэша ";
+    }
+
+    private String getTodayLastPriceMessage() {
+        return "Курс актуальный на момент закрытия биржи";
     }
 }

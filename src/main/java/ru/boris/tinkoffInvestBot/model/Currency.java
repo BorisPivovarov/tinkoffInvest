@@ -1,4 +1,4 @@
-package ru.boris.tinkoffbot.model;
+package ru.boris.tinkoffInvestBot.model;
 
 
 import lombok.AccessLevel;

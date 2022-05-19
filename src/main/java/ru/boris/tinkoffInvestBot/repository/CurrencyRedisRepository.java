@@ -1,7 +1,7 @@
-package ru.boris.tinkoffbot.repository;
+package ru.boris.tinkoffInvestBot.repository;
 
 import org.springframework.data.keyvalue.repository.KeyValueRepository;
-import ru.boris.tinkoffbot.model.Currency;
+import ru.boris.tinkoffInvestBot.model.Currency;
 
 public interface CurrencyRedisRepository extends KeyValueRepository<Currency, String>  {
 
