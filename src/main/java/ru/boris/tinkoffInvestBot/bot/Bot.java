@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -17,6 +18,7 @@ import ru.boris.tinkoffInvestBot.service.TinkoffService;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -66,12 +68,22 @@ public class Bot extends TelegramLongPollingBot {
             SendMessage.SendMessageBuilder responseBuilder = SendMessage.builder();
             responseBuilder.chatId(String.valueOf(message.getChatId()));
             responseBuilder.replyMarkup(getKeyboard());
-
+            Stickers s = new Stickers();
             String responseText;
 
             if (message.getText().equals("/start")) {
+                SendSticker stick = SendSticker.builder().chatId(String.valueOf(update.getMessage()
+                                .getChatId()))
+                        .sticker(new InputFile(s.whatsUpCat)).build();
                 responseText = "Привет, " + message.getFrom().getFirstName() +
-                        "!\n Я бот, работающий с Tinkoff Invest API.";
+                        "!\n Я бот, работающий с Тинькофф Инвестициями.";
+                try {
+                    execute(stick);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+
             } else if (message.getText().equals(GET_EUR_COMMAND)) {
                 try {
                     responseText = getMOEXPriceMessage() +
@@ -97,7 +109,8 @@ public class Bot extends TelegramLongPollingBot {
                     responseText = usd + " RUB\n" + getTodayLastPriceMessage();
                 }
             } else {
-                responseText = "Данная команда не распознана, попробуйте что-нибудь ещё.";
+                responseText = "Данная команда не распознана, попробуйте что-нибудь ещё.\n" +
+                        "Для начала можно использовать команду:\n /start";
 
             }
             sendResponse(responseBuilder, responseText);

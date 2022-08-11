@@ -78,7 +78,7 @@ public class TinkoffService {
             var endDate = timestampToString(tradingDay.getEndTime());
             if (tradingDay.getIsTradingDay()) {
                 log.info("расписание торгов для площадки MOEX. Дата: {},  открытие: {}, закрытие: {}", date, startDate, endDate);
-                getDaysListMessage =  "Расписание торгов для площадки MOEX на сегодня\n" + "открытие: "
+                getDaysListMessage = "Расписание торгов для площадки MOEX на сегодня\n" + "открытие: "
                         + startDate.replaceAll("[T,Z]", " ") + "\nзакрытие: " + endDate.replaceAll("[T,Z]", " ");
             } else {
                 log.info("расписание торгов для площадки MOEX. Дата: {}. Выходной день", date);
